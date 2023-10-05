@@ -49,10 +49,6 @@ while fechainicio <= fechafin:
             full_link = "https://elcomercio.pe" + link_new
             links.append(full_link)
 
-        else:
-            link_text = "No tiene link"
-            links.append(link_text)
-
     print(len(Titulo))
     print(len(Fecha))
     print(len(links))
