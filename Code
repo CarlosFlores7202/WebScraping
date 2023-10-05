@@ -4,27 +4,8 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 
-# zona horaria - Fecha inicio - Dias - Fecha Fin -
-
-# Lista para cada pagina 
-dfs = []
-
-peru_timezone = pytz.timezone('America/Lima')
-fechainicio = datetime(2019, 1, 1)
-numero_dias = 30
-
-if numero_dias > 0:
-    fechafin = fechainicio + timedelta(days=numero_dias - 1)
-else:
-    fechafin = fechainicio
-
-# Bucle para las fechas
-while fechainicio <= fechafin:
-  
-    fechafinal = fechainicio.strftime("%Y-%m-%d")
-
-    
-    urlbusqueda = f"https://elcomercio.pe/archivo/todas/{fechafinal}/"
+def obtener_datos_para_fecha(fecha):
+    urlbusqueda = f"https://elcomercio.pe/archivo/todas/{fecha}/"
 
     # Realiza la solicitud HTTP
     html = requests.get(urlbusqueda)
@@ -35,43 +16,62 @@ while fechainicio <= fechafin:
     Fecha = []
     links = []
 
-    # titulo
+    # Título
     for link in bsobj.findAll("h2"):
         Titulo.append(link.text)
-    #Fecha
+    
+    # Fecha
     for news in bsobj.find_all('p', {'class': 'story-item__date font-thin ml-5 text-xs text-gray-300 md:mt-5 md:ml-0'}):
         Fecha.append(news.text.strip())
 
-    #Link
+    # Link
     for index, news in enumerate(bsobj.find_all('a', {'class': 'story-item__title block overflow-hidden primary-font line-h-xs mt-10'})):
         link_new = news.get('href')
         if link_new:
             full_link = "https://elcomercio.pe" + link_new
             links.append(full_link)
+        else:
+            link_text = "********************"
+            links.append(link_text)
 
-    print(len(Titulo))
-    print(len(Fecha))
-    print(len(links))
-
-    # dataframe
-    df = pd.DataFrame({
+    return {
         'Titulo': Titulo,
         'Fecha': Fecha,
         'Link': links,
-    })
+    }
 
-    # Agregamos la pag (bucle)
-    dfs.append(df)
+def obtener_datos_por_rango_de_fechas(fecha_inicio, numero_dias):
+    datos_por_fecha = []
 
-    fechainicio = fechainicio + timedelta(days=1)
+    for i in range(numero_dias):
+        fecha_actual = fecha_inicio + timedelta(days=i)
+        fecha_str = fecha_actual.strftime("%Y-%m-%d")
+        datos_fecha = obtener_datos_para_fecha(fecha_str)
+        datos_por_fecha.append(datos_fecha)
 
-# union
-dataframefinal = pd.concat(dfs, ignore_index=True)
-pd.set_option('display.max_rows', None)
+    return datos_por_fecha
 
+def main():
+    peru_timezone = pytz.timezone('America/Lima')
+    fechainicio = datetime(2019, 1, 1)
+    numero_dias = 30
 
-print(dataframefinal)
+    if numero_dias > 0:
+        fechafin = fechainicio + timedelta(days=numero_dias - 1)
+    else:
+        fechafin = fechainicio
 
-# Guardado
+    dfs = obtener_datos_por_rango_de_fechas(fechainicio, numero_dias)
 
-dataframefinal.to_csv('data.csv', index=False)
+    # Unión de datos
+    dataframefinal = pd.concat([pd.DataFrame(data) for data in dfs], ignore_index=True)
+    pd.set_option('display.max_rows', None)
+
+    print(dataframefinal)
+
+    # Guardado
+    dataframefinal.to_csv('data.csv', index=False)
+    dataframefinal.to_excel('data.xlsx', index=False)
+
+if __name__ == "__main__":
+    main()
