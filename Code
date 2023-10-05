@@ -71,7 +71,7 @@ def main():
 
     # Guardado
     dataframefinal.to_csv('data.csv', index=False)
-    dataframefinal.to_excel('data.xlsx', index=False)
+    #dataframefinal.to_excel('data.xlsx', index=False)
 
 if __name__ == "__main__":
     main()
