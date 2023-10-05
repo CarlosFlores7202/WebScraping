@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 
 # zona horaria - Fecha inicio - Dias - Fecha Fin -
 
+# Lista para cada pagina 
+dfs = []
+
 peru_timezone = pytz.timezone('America/Lima')
 fechainicio = datetime(2019, 1, 1)
 numero_dias = 30
@@ -14,9 +17,6 @@ if numero_dias > 0:
     fechafin = fechainicio + timedelta(days=numero_dias - 1)
 else:
     fechafin = fechainicio
-
-# Lista para cada pagina 
-dfs = []
 
 # Bucle para las fechas
 while fechainicio <= fechafin:
@@ -63,7 +63,7 @@ while fechainicio <= fechafin:
     # Agregamos la pag (bucle)
     dfs.append(df)
 
-    fechainicio += timedelta(days=1)
+    fechainicio = fechainicio + timedelta(days=1)
 
 # union
 dataframefinal = pd.concat(dfs, ignore_index=True)
