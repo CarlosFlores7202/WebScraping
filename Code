@@ -77,5 +77,5 @@ pd.set_option('display.max_rows', None)
 print(dataframefinal)
 
 # Guardado
-dataframefinal.to_excel('elcomercio_data3.xlsx', index=False)
-dataframefinal.to_csv('elcomercio_data3.csv', index=False)
+
+dataframefinal.to_csv('data.csv', index=False)
