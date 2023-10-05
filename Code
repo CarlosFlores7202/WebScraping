@@ -1,0 +1,87 @@
+from bs4 import BeautifulSoup
+import pytz
+import requests
+import pandas as pd
+from datetime import datetime, timedelta
+
+# zona horaria 
+peru_timezone = pytz.timezone('America/Lima')
+
+# fecha de inicio 
+fechainicio = datetime(2019, 1, 1)
+
+# Dias
+numero_dias = 30
+
+# Fecha Fin
+
+if numero_dias > 0:
+    fechafin = fechainicio + timedelta(days=numero_dias - 1)
+else:
+    fechafin = fechainicio
+
+# Lista para cada pagina de Df
+dfs = []
+
+# Bucle
+while fechainicio <= fechafin:
+    # Formato de fecha
+    fechafinal = fechainicio.strftime("%Y-%m-%d")
+
+    # Url
+    cnn_url = f"https://elcomercio.pe/archivo/todas/{fechafinal}/"
+
+    # solicitud HTTP
+    html = requests.get(cnn_url)
+    bsobj = BeautifulSoup(html.content, 'lxml')
+
+    # Listas
+    Titulo = []
+    Fecha = []
+    links = []
+
+    # Extraccion titulo
+    for link in bsobj.findAll("h2"):
+        Titulo.append(link.text)
+
+    for news in bsobj.find_all('p', {'class': 'story-item__date font-thin ml-5 text-xs text-gray-300 md:mt-5 md:ml-0'}):
+        Fecha.append(news.text.strip())
+
+  #lINK
+    for index, news in enumerate(bsobj.find_all('a', {'class': 'story-item__title block overflow-hidden primary-font line-h-xs mt-10'})):
+        link_new = news.get('href')
+        if link_new:
+            full_link = "https://elcomercio.pe" + link_new
+            links.append(full_link)
+
+        else:
+            link_text = "No tiene link"
+            links.append(link_text)
+
+    print(len(Titulo))
+    print(len(Fecha))
+    print(len(links))
+
+    # dataframe
+    df = pd.DataFrame({
+        'Titulo': Titulo,
+        'Fecha': Fecha,
+        'Link': links,
+    })
+
+    # Agregamos la primera pag
+    dfs.append(df)
+
+    # Incremento
+    fechainicio += timedelta(days=1)
+
+# juntamos dataframe
+dataframefinal = pd.concat(dfs, ignore_index=True)
+pd.set_option('display.max_rows', None)
+
+
+print(dataframefinal)
+
+# Guardar df
+dataframefinal.to_csv('elcomercio_data3.csv', index=False)
+dataframefinal.to_excel('elcomercio_data3.xlsx', index=False)
